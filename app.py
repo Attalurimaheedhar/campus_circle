@@ -15,11 +15,16 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
-app.secret_key = "eco_mart_secret_key"  # 🔴 change in production
+
+# 🔐 SECRET KEY (UPDATED FOR RENDER)
+app.secret_key = os.environ.get("SECRET_KEY", "eco_mart_secret_key")
 
 # ---------------- FILE UPLOAD CONFIG ----------------
-UPLOAD_FOLDER = r"C:\Users\mathe\OneDrive\Desktop\Eco_Mart\static\uploads"
+# ✅ UPDATED: Render-safe upload path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
 
@@ -39,7 +44,7 @@ def login_required(f):
 
 def send_otp_email(to_email, otp):
     sender_email = "ecomart.campus@gmail.com"
-    app_password = "ping gsoy euoj jtws"
+    app_password = os.environ.get("EMAIL_PASSWORD", "ping gsoy euoj jtws")
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
@@ -157,7 +162,6 @@ def verify_otp():
 
     return render_template("verify_otp.html")
 
-# ✅ ADDED ROUTE (FIXES BuildError)
 @app.route("/resend_otp", methods=["POST"])
 def resend_otp():
     temp_user = session.get("temp_user")
@@ -347,4 +351,5 @@ def sold():
     return render_template("sold.html", sold_items=db.get_sold_items(session["id"]))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
