@@ -1,4 +1,6 @@
-import mysql.connector
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from random import randint
@@ -10,13 +12,15 @@ DB_CONFIG = {
     "database": "eco_mart"
 }
 
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
 def get_connection():
-    return mysql.connector.connect(**DB_CONFIG)
+    return psycopg2.connect(DATABASE_URL)
 
 # ---------------- USER ----------------
 def get_user_by_email(email):
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
     user = cursor.fetchone()
     cursor.close()
@@ -25,7 +29,7 @@ def get_user_by_email(email):
 
 def get_user_by_id(user_id):
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
     cursor.close()
@@ -80,7 +84,7 @@ def store_otp(email, otp, expiry):
 
 def verify_otp(email, otp):
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute(
         "SELECT * FROM otps WHERE email=%s AND otp=%s AND expiry > NOW() "
         "ORDER BY id DESC LIMIT 1",
@@ -98,11 +102,10 @@ def verify_otp(email, otp):
 def add_product(seller_id, name, category, price, description, image_string):
     conn = get_connection()
     cursor = conn.cursor()
-    image_bytes = image_string.encode("utf-8") if image_string else None
     cursor.execute(
         "INSERT INTO products (seller_id, name, category, price, description, image, created_at) "
         "VALUES (%s,%s,%s,%s,%s,%s,NOW())",
-        (seller_id, name, category, price, description, image_bytes)
+        (seller_id, name, category, price, description, image_string)
     )
     conn.commit()
     cursor.close()
@@ -110,17 +113,14 @@ def add_product(seller_id, name, category, price, description, image_string):
 
 def get_all_products():
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute(
         "SELECT p.*, u.name AS seller_name FROM products p "
         "JOIN users u ON p.seller_id=u.id "
-        "WHERE p.is_sold = 0 "
+        "WHERE p.is_sold = FALSE "
         "ORDER BY p.created_at DESC"
     )
     products = cursor.fetchall() or []
-    for p in products:
-        if p.get("image") and isinstance(p["image"], bytes):
-            p["image"] = p["image"].decode("utf-8")
     cursor.close()
     conn.close()
     return products
@@ -144,8 +144,7 @@ def add_to_cart(user_id, product_id, quantity=1):
         )
     else:
         cursor.execute(
-            "INSERT INTO cart (user_id, product_id, quantity) "
-            "VALUES (%s,%s,%s)",
+            "INSERT INTO cart (user_id, product_id, quantity) VALUES (%s,%s,%s)",
             (user_id, product_id, quantity)
         )
 
@@ -160,7 +159,7 @@ def add_to_cart(user_id, product_id, quantity=1):
 
 def get_cart(user_id):
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute(
         "SELECT p.id AS product_id, p.name, p.price, c.quantity, p.image "
         "FROM cart c JOIN products p ON c.product_id=p.id "
@@ -168,9 +167,6 @@ def get_cart(user_id):
         (user_id,)
     )
     items = cursor.fetchall() or []
-    for item in items:
-        if item.get("image") and isinstance(item["image"], bytes):
-            item["image"] = item["image"].decode("utf-8")
     cursor.close()
     conn.close()
     return items
@@ -189,115 +185,19 @@ def remove_from_cart(user_id, product_id):
 def get_cart_product_ids(user_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT product_id FROM cart WHERE user_id=%s",
-        (user_id,)
-    )
+    cursor.execute("SELECT product_id FROM cart WHERE user_id=%s", (user_id,))
     rows = cursor.fetchall() or []
     cursor.close()
     conn.close()
     return [r[0] for r in rows]
-
-# ---------------- ORDERS ----------------
-def place_order(user_id):
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute(
-        "SELECT c.product_id, c.quantity, p.price "
-        "FROM cart c JOIN products p ON c.product_id=p.id "
-        "WHERE c.user_id=%s",
-        (user_id,)
-    )
-    cart_items = cursor.fetchall() or []
-
-    if not cart_items:
-        return
-
-    total = sum(item["price"] * item["quantity"] for item in cart_items)
-
-    cursor.execute(
-        "INSERT INTO orders (user_id, total, status, created_at) "
-        "VALUES (%s,%s,'Placed',NOW())",
-        (user_id, total)
-    )
-    order_id = cursor.lastrowid
-
-    for item in cart_items:
-        cursor.execute(
-            "INSERT INTO order_items (order_id, product_id, quantity, price) "
-            "VALUES (%s,%s,%s,%s)",
-            (order_id, item["product_id"], item["quantity"], item["price"])
-        )
-
-        cursor.execute(
-            "UPDATE products SET is_sold=1 WHERE id=%s",
-            (item["product_id"],)
-        )
-
-    cursor.execute("DELETE FROM cart WHERE user_id=%s", (user_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-def get_orders(user_id):
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT * FROM orders WHERE user_id=%s ORDER BY created_at DESC",
-        (user_id,)
-    )
-    orders = cursor.fetchall() or []
-
-    for order in orders:
-        cursor.execute(
-            "SELECT oi.quantity, oi.price, p.name, p.image "
-            "FROM order_items oi "
-            "JOIN products p ON oi.product_id=p.id "
-            "WHERE oi.order_id=%s",
-            (order["id"],)
-        )
-        items = cursor.fetchall() or []
-        for item in items:
-            if item.get("image") and isinstance(item["image"], bytes):
-                item["image"] = item["image"].decode("utf-8")
-        order["items"] = items
-
-    cursor.close()
-    conn.close()
-    return orders
-
-# ---------------- SOLD ITEMS ----------------
-def get_sold_items(user_id):
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        """
-        SELECT p.*, MAX(o.created_at) AS last_sold_at
-        FROM products p
-        JOIN order_items oi ON p.id = oi.product_id
-        JOIN orders o ON oi.order_id = o.id
-        WHERE p.seller_id=%s AND o.status='Placed'
-        GROUP BY p.id
-        ORDER BY last_sold_at DESC
-        """,
-        (user_id,)
-    )
-    items = cursor.fetchall() or []
-    for item in items:
-        if item.get("image") and isinstance(item["image"], bytes):
-            item["image"] = item["image"].decode("utf-8")
-    cursor.close()
-    conn.close()
-    return items
 
 # ---------------- WISHLIST ----------------
 def add_to_wishlist(user_id, product_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT IGNORE INTO wishlist (user_id, product_id, created_at) "
-        "VALUES (%s,%s,NOW())",
+        "INSERT INTO wishlist (user_id, product_id, created_at) "
+        "VALUES (%s,%s,NOW()) ON CONFLICT DO NOTHING",
         (user_id, product_id)
     )
     conn.commit()
@@ -317,16 +217,13 @@ def remove_from_wishlist(user_id, product_id):
 
 def get_wishlist(user_id):
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute(
         "SELECT p.* FROM wishlist w JOIN products p ON w.product_id=p.id "
         "WHERE w.user_id=%s ORDER BY w.created_at DESC",
         (user_id,)
     )
     items = cursor.fetchall() or []
-    for item in items:
-        if item.get("image") and isinstance(item["image"], bytes):
-            item["image"] = item["image"].decode("utf-8")
     cursor.close()
     conn.close()
     return items
@@ -340,14 +237,11 @@ def get_wishlist_product_ids(user_id):
     conn.close()
     return [r[0] for r in rows]
 
-# ======================================================
-# =============== ADMIN DASHBOARD (NEW) =================
-# ======================================================
-
+# ---------------- ADMIN DASHBOARD ----------------
 def get_total_revenue():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT IFNULL(SUM(total),0) FROM orders")
+    cursor.execute("SELECT COALESCE(SUM(total),0) FROM orders")
     total = cursor.fetchone()[0]
     cursor.close()
     conn.close()
@@ -384,10 +278,10 @@ def get_orders_this_week():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT DAYNAME(created_at), COUNT(*)
+        SELECT TO_CHAR(created_at, 'Dy'), COUNT(*)
         FROM orders
-        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        GROUP BY DAYNAME(created_at)
+        WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+        GROUP BY TO_CHAR(created_at, 'Dy')
     """)
     rows = cursor.fetchall()
 
@@ -395,7 +289,7 @@ def get_orders_this_week():
     data = {d: 0 for d in days}
 
     for day, count in rows:
-        data[day[:3]] = count
+        data[day.strip()] = count
 
     cursor.close()
     conn.close()
@@ -404,11 +298,9 @@ def get_orders_this_week():
 def get_orders_by_status():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT status, COUNT(*)
-        FROM orders
-        GROUP BY status
-    """)
+    cursor.execute(
+        "SELECT status, COUNT(*) FROM orders GROUP BY status"
+    )
     rows = cursor.fetchall()
 
     result = {"pending": 0, "confirmed": 0, "cancelled": 0}
