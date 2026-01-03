@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🛒 Campus Circle – Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to right, #d9ff7a, #9ff0c1);
+}
+
+header {
+  padding: 16px 32px;
+  background: linear-gradient(to right, #d6ff9f, #a8f0b8);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.container {
+  margin: 30px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 30px;
+}
+
+.tabs {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+.tab {
+  padding: 10px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #555;
+}
+
+.tab.active {
+  background: #b7e08a;
+  color: #000;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 16px;
+  background: #f5fffa;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+}
+
+.card.red { background: #fff0f0; }
+.card h3 { margin: 0; font-size: 14px; color: #666; }
+.card p { margin: 8px 0 0; font-size: 22px; font-weight: 700; }
+
+.charts {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+.chart-box {
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🛒 Campus Circle – Admin Panel</h1>
+<div>Last updated: {{ now.strftime('%d %b %Y, %I:%M %p') }}</div>
+
+</header>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab active">Dashboard</div>
+    <div class="tab">Orders</div>
+    <div class="tab">Users</div>
+    <div class="tab">Products</div>
+    <div class="tab">Categories</div>
+    <div class="tab">Settings</div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Total Revenue</h3>
+      <p>₹{{ stats.revenue }}</p>
+    </div>
+    <div class="card">
+      <h3>Total Orders</h3>
+      <p>{{ stats.total_orders }}</p>
+    </div>
+    <div class="card">
+      <h3>Active Users</h3>
+      <p>{{ stats.active_users }}</p>
+    </div>
+    <div class="card red">
+      <h3>Pending Orders</h3>
+      <p>{{ stats.pending_orders }}</p>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-box">
+      <h3>📈 Orders This Week</h3>
+      <canvas id="weeklyChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <h3>📦 Orders by Status</h3>
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const weeklyData = {{ weekly_orders | tojson }};
+const statusData = {{ order_status | tojson }};
+
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Fri','Sat','Sun','Mon','Tue','Wed','Thu'],
+    datasets: [{
+      data: weeklyData,
+      backgroundColor: '#36cc6f',
+      borderRadius: 8
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false }},
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(statusData),
+    datasets: [{
+      data: Object.values(statusData),
+      backgroundColor: ['#1aa37a', '#ffc107', '#ff6b6b']
+    }]
+  },
+  options: {
+    cutout: '70%',
+    plugins: { legend: { position: 'right' } }
+  }
+});
+</script>
+
+</body>
+</html>

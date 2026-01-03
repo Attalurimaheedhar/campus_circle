@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoMart – User Details</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="details">
+  <header>
+    <div class="logo">🌿 EcoMart</div>
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="cart.html">Cart</a>
+      <a href="payments.html">Payment History</a>
+      <a id="user-icon" aria-label="User Profile" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">👤</a>
+    </nav>
+    <div id="user-menu" role="menu" aria-label="User menu">
+      <a href="details.html" role="menuitem" tabindex="-1">Details</a>
+      <a href="orders.html" role="menuitem" tabindex="-1">Orders</a>
+      <a href="wishlist.html" role="menuitem" tabindex="-1">Wishlist</a>
+      <a href="sold.html" role="menuitem" tabindex="-1">Sold Items</a>
+      <a onclick="logout()" role="menuitem" tabindex="-1">Logout</a>
+    </div>
+  </header>
+
+  <div class="page-section">
+    <h1>User Details</h1>
+    <p><strong>Username:</strong> <span id="detail-username"></span></p>
+    <p><strong>Email:</strong> <span id="detail-email"></span></p>
+
+    <button onclick="toggleChangePasswordForm()">Change Password</button>
+    <form id="change-password-form" onsubmit="return changePassword(event)">
+      <label for="current-password">Current Password</label>
+      <input type="password" id="current-password" required />
+      <label for="new-password">New Password</label>
+      <input type="password" id="new-password" minlength="4" required />
+      <label for="confirm-password">Confirm New Password</label>
+      <input type="password" id="confirm-password" minlength="4" required />
+      <button type="submit">Submit</button>
+      <p class="error" id="password-error"></p>
+    </form>
+
+    <a href="home.html"><button>Home</button></a>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🛒 Campus Circle – Student Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style type="text/css">@import url("../static/css/style1.css")</style>
+</head>
+<body>
+
+<!-- TERMS PAGE -->
+<div id="terms-page" class="terms-wrapper" role="dialog" aria-modal="true">
+  <div class="terms-container">
+    <h1>🛒 Campus Circle - Terms & Conditions</h1>
+    <div class="terms-box">
+      <ol>
+          <li>Only currently enrolled students with valid college ID/email are allowed to register and use Campus Circle.</li>
+          <li>Users must provide accurate and up-to-date information at registration for verification purposes.</li>
+          <li>Campus Circle is a platform connecting student buyers and sellers; Campus Circle is not the seller or buyer of any items.</li>
+          <li>Users agree to use the platform only for legal, lawful transactions of campus-relevant goods.</li>
+          <li>Sellers are responsible for ensuring the accuracy, authenticity, and condition of items listed.</li>
+          <li>Buyers should confirm item condition before purchase. Campus Circle does not guarantee item quality or condition.</li>
+          <li>Campus Circle may charge commission or fees on sales, listing boosts, or optional services, payable by the seller or buyer as agreed.</li>
+          <li>All payments via Campus Circle are subject to applicable taxes and GST as per Indian laws.</li>
+          <li>Users shall not post illegal, dangerous, or prohibited items.</li>
+          <li>Harassment, fraud, false listings, or abusive behavior will result in account suspension or legal action.</li>
+          <li>User data is collected and used per the Campus Circle Privacy Policy.</li>
+          <li>Personal data shared during transactions will be protected and only used for platform operation.</li>
+          <li>Any feedback or suggestions provided by users about Campus Circle may be used royalty-free by the platform to improve the service.</li>
+          <li>Campus Circle provides tools for dispute reporting and mediation but does not directly resolve buyer-seller conflicts.</li>
+          <li>Users must attempt resolution in good faith and may seek legal remedies independently.</li>
+          <li>Campus Circle is not liable for any damages, losses, or expenses arising from use of the platform or transactions conducted.</li>
+          <li>The platform is provided "as is" without warranties of any kind.</li>
+          <li>Campus Circle reserves the right to suspend or terminate accounts violating terms without prior notice.</li>
+          <li>Campus Circle may update these Terms and Conditions at any time; continued use constitutes acceptance of changes.</li>
+          <li>These Terms are governed by Indian law, and disputes shall be subject to jurisdiction in the city where Campus Circle is headquartered or operates.</li>
+        </ol>
+    </div>
+    <div class="terms-actions">
+      <button class="accept-btn" id="accept-terms-btn">Accept & Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<section id="login-section" class="auth-page" style="display:none;">
+  <div class="auth-container">
+    <h2>Login</h2>
+
+    <!-- FORM START -->
+    <form method="POST" action="{{ url_for('login') }}">
+      <input type="email" name="email" placeholder="Enter College Email" required />
+      <input type="password" name="password" placeholder="Enter Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <!-- FORM END -->
+
+    <div class="switch">
+      Don’t have an account? <a href="{{ url_for('signup') }}">Sign Up</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.getElementById('accept-terms-btn').onclick = () => {
+    document.getElementById('terms-page').style.display = 'none';
+    document.getElementById('login-section').style.display = 'flex';
+  };
+</script>
+
+</body>
+</html>

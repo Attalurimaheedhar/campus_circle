@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🛒 Campus Circle – Home</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Flask Static CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style1.css') }}">
+
+  <style>
+    /* profile dropdown fix – style preserved */
+    .profile-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .profile-btn svg {
+      width: 26px;
+      height: 26px;
+      stroke: #333;
+    }
+
+    #user-menu {
+      position: absolute;
+      top: 45px;
+      right: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      display: none;
+      flex-direction: column;
+      min-width: 190px;
+      z-index: 1000;
+    }
+
+    #user-menu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    #user-menu a svg {
+      width: 18px;
+      height: 18px;
+      stroke: #333;
+    }
+
+    #user-menu a:hover {
+      background: #f2f2f2;
+    }
+
+    #user-menu.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body data-page="home">
+
+<header>
+  <div class="logo">🛒 Campus Circle</div>
+
+  <nav>
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('cart') }}"> Cart</a>
+    <a href="{{ url_for('orders') }}">Orders</a>
+
+    <!-- Profile -->
+    <div class="profile-wrapper">
+      <div class="profile-btn" id="profileBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+
+      <div id="user-menu">
+        <a href="{{ url_for('profile') }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Profile Details
+        </a>
+
+        <a href="{{ url_for('orders') }}">📦 Orders</a>
+        <a href="{{ url_for('wishlist') }}">♡ Wishlist</a>
+        <a href="{{ url_for('sold') }}">🧾 Sold Items</a>
+
+        {% if session.role in ['admin', 'super_admin'] %}
+        <a href="{{ url_for('admin_panel') }}">🛠 Admin Panel</a>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}">⏻ Logout</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Every Item Deserves a Second Chance</h1>
+  <p>
+    EcoMart is your campus-exclusive marketplace to buy, sell,
+    or give away pre-loved items.
+  </p>
+
+  <div class="cta-buttons">
+    <a href="{{ url_for('buy') }}">Buy Items</a>
+    <a href="{{ url_for('sell') }}">Sell Items</a>
+  </div>
+</section>
+
+<section class="categories">
+  <div class="category-card">
+    <img src="https://img.icons8.com/ios-filled/100/000000/book.png" />
+    <h3>Books</h3>
+  </div>
+
+  <div class="category-card">
+    <img src="https://img.icons8.com/ios-filled/100/000000/t-shirt.png" />
+    <h3>Clothes</h3>
+  </div>
+
+  <div class="category-card">
+    <img src="https://img.icons8.com/ios-filled/100/000000/laptop.png" />
+    <h3>Gadgets</h3>
+  </div>
+
+  <div class="category-card">
+    <img src="https://img.icons8.com/ios-filled/100/000000/stationery.png" />
+    <h3>Stationery</h3>
+  </div>
+
+  <div class="category-card">
+    <img src="https://img.icons8.com/ios-filled/100/000000/gift.png" />
+    <h3>Free Items</h3>
+  </div>
+</section>
+
+<footer>
+  &copy; 2025 Campus Circle.
+  <p>Together we build. Together we grow.</p>
+</footer>
+
+<script>
+  const profileBtn = document.getElementById("profileBtn");
+  const userMenu = document.getElementById("user-menu");
+
+  profileBtn.addEventListener("click", () => {
+    userMenu.classList.toggle("show");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".profile-wrapper")) {
+      userMenu.classList.remove("show");
+    }
+  });
+</script>
+
+</body>
+</html>

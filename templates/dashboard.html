@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style1.css') }}">
+</head>
+<body>
+
+<nav>
+    Welcome {{ name }} |
+    <a href="{{ url_for('buy') }}">Buy</a>
+    <a href="{{ url_for('sell') }}">Sell</a>
+    <a href="{{ url_for('cart') }}">Cart</a>
+    <a href="{{ url_for('orders') }}">Orders</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</nav>
+
+<div class="container">
+    <h2>Dashboard</h2>
+    <p>Select an option from the menu.</p>
+</div>
+
+</body>
+</html>

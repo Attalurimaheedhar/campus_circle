@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🛒 Campus Circle – Wishlist</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Flask Static CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+
+  <style>
+    body {
+      background: linear-gradient(180deg, #f3fbf6, #eef7f1);
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+    }
+
+    header {
+      background: #ffffff;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #2e7d32;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    .page-section {
+      max-width: 1150px;
+      margin: 2.5rem auto;
+      padding: 1rem 1.2rem;
+      text-align: center;
+    }
+
+    .page-section h1 {
+      font-weight: 700;
+      color: #2e7d32;
+      font-size: 2.1rem;
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.8rem;
+      margin-top: 2.4rem;
+    }
+
+    .category-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 1.1rem;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .category-card img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin: 0.8rem 0;
+    }
+
+    .category-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .category-card p {
+      font-weight: 700;
+      color: #43a047;
+      font-size: 1.05rem;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .add-cart-btn {
+      margin-top: 0.8rem;
+      padding: 0.55rem 1.4rem;
+      background: linear-gradient(135deg, #2e7d32, #4CAF50);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .empty-text {
+      margin-top: 2.5rem;
+      font-size: 1.05rem;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">🛒 Campus Circle</div>
+  <nav>
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('cart') }}">Cart</a>
+    <a href="{{ url_for('orders') }}">Orders</a>
+  </nav>
+</header>
+
+<div class="page-section">
+  <h1>Your Wishlist</h1>
+
+  {% if items %}
+    <div class="categories">
+      {% for item in items %}
+        <div class="category-card" id="card-{{ item.id }}">
+
+          <form method="POST" action="{{ url_for('remove_from_wishlist', product_id=item.id) }}">
+            <button type="submit" class="remove-btn">×</button>
+          </form>
+
+          {% if item.image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ item.image.split(',')[0]) }}">
+          {% else %}
+            <img src="{{ url_for('static', filename='images/placeholder.png') }}">
+          {% endif %}
+
+          <h3>{{ item.name }}</h3>
+          <p>₹{{ item.price }}</p>
+
+          <button class="add-cart-btn" onclick="addToCart({{ item.id }})">
+            Add to Cart
+          </button>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty-text">You have no wishlist items yet.</p>
+  {% endif %}
+</div>
+
+<script>
+function addToCart(productId) {
+  fetch("/cart", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      product_id: productId,
+      quantity: 1
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      const card = document.getElementById("card-" + productId);
+      if (card) card.remove();
+    }
+  })
+  .catch(err => console.error(err));
+}
+
+/* ✅ INTERCEPT WISHLIST FORM SUBMIT — NO REDIRECT */
+document.querySelectorAll("form[action*='remove_from_wishlist']").forEach(form => {
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    fetch(this.action, {
+      method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const card = this.closest(".category-card");
+        if (card) card.remove();
+      }
+    })
+    .catch(err => console.error(err));
+  });
+});
+</script>
+
+</body>
+</html>

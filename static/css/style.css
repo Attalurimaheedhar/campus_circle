@@ -1,0 +1,145 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: linear-gradient(to right, #d4fc79, #96e6a1);
+  color: #333;
+}
+
+/* ---------- HEADER ---------- */
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2ecc71;
+}
+
+nav a {
+  margin-left: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  color: #333;
+}
+
+/* ---------- HERO SECTION ---------- */
+.hero {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+/* ---------- CATEGORIES ---------- */
+.categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* ---------- SELL FORM & PAYMENTS ---------- */
+.sell-form,
+.payments {
+  padding: 2rem;
+  max-width: 400px;
+  margin: auto;
+}
+
+.sell-form h2,
+.payments h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.sell-form input,
+.sell-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.sell-form textarea {
+  resize: none;
+  height: 80px;
+}
+
+.sell-form button {
+  background: #2ecc71;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- AUTH PAGES ---------- */
+.auth {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.auth-box {
+  background: white;
+  padding: 2rem;
+  width: 320px;
+  border-radius: 15px;
+}
+
+.auth-box h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.auth-box input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.auth-box button {
+  width: 100%;
+  padding: 10px;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-box p {
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+  text-align: center;
+  padding: 1rem;
+  margin-top: 2rem;
+}

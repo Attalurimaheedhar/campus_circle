@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EcoMart – Verify OTP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style type="text/css">@import url("../static/css/style1.css");</style>
+</head>
+
+<body>
+
+<section class="auth-page">
+  <div class="auth-container">
+
+    <h2>Verify OTP</h2>
+    <p class="subtitle">Enter the OTP sent to your email</p>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p class="{{ category }}">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <input
+        type="text"
+        name="otp"
+        placeholder="Enter OTP"
+        required
+      />
+
+      <button type="submit">Verify OTP</button>
+    </form>
+
+    <p id="timer" class="timer-text"></p>
+
+    <a
+      id="resend"
+      href="{{ url_for('resend_otp') }}"
+      class="resend-link"
+      style="display:none;"
+    >
+      Resend OTP
+    </a>
+
+  </div>
+</section>
+
+<script>
+  let timeLeft = 60;
+  const timer = document.getElementById("timer");
+  const resend = document.getElementById("resend");
+
+  const countdown = setInterval(() => {
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      resend.style.display = "block";
+      timer.innerText = "Didn’t receive OTP?";
+    } else {
+      timer.innerText = "Resend OTP in " + timeLeft + " seconds";
+      timeLeft--;
+    }
+  }, 1000);
+</script>
+
+</body>
+</html>
