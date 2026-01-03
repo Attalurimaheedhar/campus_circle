@@ -1,31 +1,80 @@
-CREATE DATABASE ecomart;
-USE ecomart;
+-- Drop tables if they exist (order matters due to foreign keys)
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS wishlist CASCADE;
+DROP TABLE IF EXISTS cart CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS otps CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
+-- ---------------- USERS ----------------
 CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    password VARCHAR(255),
-    is_verified BOOLEAN DEFAULT FALSE
+    phone VARCHAR(20),
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE otp_verification (
-    email VARCHAR(100),
-    otp VARCHAR(6)
+-- ---------------- OTPS ----------------
+CREATE TABLE otps (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(100) NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    expiry TIMESTAMP NOT NULL
 );
 
-CREATE TABLE items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    item_name VARCHAR(100),
-    price DECIMAL(10,2),
+-- ---------------- PRODUCTS ----------------
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    seller_id INT REFERENCES users(id) ON DELETE SET NULL,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    price NUMERIC(10,2),
     description TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    image TEXT,
+    is_sold BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE payments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    amount DECIMAL(10,2),
-    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- ---------------- CART ----------------
+CREATE TABLE cart (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id) ON DELETE CASCADE,
+    quantity INT DEFAULT 1
 );
+
+-- ---------------- WISHLIST ----------------
+CREATE TABLE wishlist (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, product_id)
+);
+
+-- ---------------- ORDERS ----------------
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    total NUMERIC(10,2),
+    status VARCHAR(20) DEFAULT 'Placed',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------------- ORDER ITEMS ----------------
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id) ON DELETE SET NULL,
+    quantity INT DEFAULT 1,
+    price NUMERIC(10,2)
+);
+
+-- ---------------- INITIAL DATA ----------------
+-- Example: create an admin user if not exists
+INSERT INTO users (name, phone, email, password)
+VALUES ('Admin', '1234567890', 'admin@eco.com', 'adminhashedpassword')
+ON CONFLICT (email) DO NOTHING;
