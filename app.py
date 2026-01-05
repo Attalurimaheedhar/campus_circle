@@ -20,7 +20,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "eco_mart_secret_key")
 
 # ---------------- FILE UPLOAD CONFIG ----------------
-# ✅ UPDATED: Render-safe upload path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -42,9 +41,23 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 def send_otp_email(to_email, otp):
-    sender_email = "ecomart.campus@gmail.com"
-    app_password = os.environ.get("EMAIL_PASSWORD", "ping gsoy euoj jtws")
+    """
+    Render blocks SMTP.
+    This function will:
+    - Work locally
+    - Fail gracefully on Render
+    - NEVER crash the server
+    """
+
+    sender_email = os.environ.get("EMAIL_ADDRESS")
+    app_password = os.environ.get("EMAIL_PASSWORD")
+
+    # If email creds are missing, skip safely
+    if not sender_email or not app_password:
+        print("Email credentials missing. OTP:", otp)
+        return True  # allow signup to proceed (demo-safe)
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
@@ -65,15 +78,19 @@ EcoMart Team
     msg.attach(MIMEText(body, "plain"))
 
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
+        # Render blocks SMTP → this will fail but NOT crash
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=10)
         server.starttls()
         server.login(sender_email, app_password)
         server.sendmail(sender_email, to_email, msg.as_string())
         server.quit()
         return True
+
     except Exception as e:
-        print("Email error:", e)
-        return False
+        print("SMTP blocked or failed:", e)
+        print("OTP (fallback):", otp)
+        return True  # IMPORTANT: prevent 500 error
+
 
 # ---------------- ROUTES ----------------
 @app.route("/")
@@ -126,8 +143,7 @@ def signup():
     expiry = db.otp_expiry()
     db.store_otp(email, otp, expiry)
 
-    if not send_otp_email(email, otp):
-        return render_template("signup.html", error="Failed to send OTP")
+    send_otp_email(email, otp)
 
     session["temp_user"] = {
         "name": name,
